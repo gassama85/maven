@@ -1,0 +1,25 @@
+node('master') 
+{
+    stage('ContinuousDownload')
+    {
+        git 'https://github.com/gassama85/maven.git'
+    }
+    stage('ContinuousBuild')
+    {
+        sh 'mvn package'
+    }
+    stage('ContinuousDeployment')
+    {
+        deploy adapters: [tomcat9(credentialsId: 'aaf866a4-b1ad-401a-8ab8-f19916e43272', path: '', url: 'http://172.31.17.27:8080')], contextPath: 'testapp', war: '**/*.war'
+    }
+    stage('ContinuousTesting')
+    {
+        git 'https://github.com/selenium-saikrishna/FunctionalTesting.git'
+        sh 'java -jar /home/ubuntu/.jenkins/workspace/scriptedpipeline/testing.jar'
+    }
+    stage('ContinuousDelivery')
+    {
+        input message: 'Waiting for approval from the DM', submitter: 'Amadou'
+        deploy adapters: [tomcat9(credentialsId: 'aaf866a4-b1ad-401a-8ab8-f19916e43272', path: '', url: 'http://172.31.18.190:8080')], contextPath: 'prodapp', war: '**/*.war'
+    }
+}
