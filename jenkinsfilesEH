@@ -1,0 +1,93 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('continuousDownload')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/gassama85/maven.git'
+                    }
+                    catch(Exception e1)
+                    {
+                        mail bcc: '', body: 'Jenkins failed to download codes for the skyda project', cc: 'gassama85@gmail.com', from: '', replyTo: '', subject: 'Download failure notice', to: 'gassama85@yahoo.com'
+                    }
+                }
+            }
+        }
+        stage('continuousBuild')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh 'mvn package'
+                    }
+                    catch(Exception e1)
+                    {
+                        mail bcc: '', body: 'Jenkins failed to build artifact from the skyda project codes', cc: 'gassama85@gmail.com', from: '', replyTo: '', subject: 'Build failure notice', to: 'gassama85@yahoo.com'
+                    }
+                }
+            }
+        }
+        stage('continuousDeployment')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        deploy adapters: [tomcat9(credentialsId: 'bc8d4b6c-2954-40ca-8ac7-5d15dcaaf92b', path: '', url: 'http://172.31.25.182:8080')], contextPath: 'testapp', war: '**/*.war'
+                    }
+                    catch(Exception e1)
+                    {
+                       mail bcc: '', body: 'Jenkins failed to deploy artifact of the skyda project to tomcat in the QAServer', cc: 'gassama85@gmail.com', from: '', replyTo: '', subject: 'Deployment failure notice', to: 'gassama85@yahoo.com' 
+                    }
+                }
+            }
+        }
+        stage('continuousTesting')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/gassama85/FunctionalTesting.git'
+                        sh 'java -jar /home/ubuntu/.jenkins/workspace/DeclarativePipelineEH/testing.jar'
+                    }
+                    catch(Exception e1)
+                    {
+                        mail bcc: '', body: 'Jenkins failed to download the selenium scripts of the skyda project', cc: 'gassama85@gmail.com', from: '', replyTo: '', subject: 'Download failure notice', to: 'gassama85@yahoo.com'
+                    }
+                }
+            }
+        }
+        stage('continuousDelivery')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        deploy adapters: [tomcat9(credentialsId: 'bc8d4b6c-2954-40ca-8ac7-5d15dcaaf92b', path: '', url: 'http://172.31.46.227:8080')], contextPath: 'prodapp', war: '**/*.war'
+                    }
+                    catch(Exception e1)
+                    {
+                        mail bcc: '', body: 'Jenkins failed to deploy the codes for the skyda project', cc: 'gassama85@gmail.com', from: '', replyTo: '', subject: 'Deployment failure notice', to: 'gassama85@yahoo.com'
+                    }
+                }
+            }
+        }
+    }
+}
