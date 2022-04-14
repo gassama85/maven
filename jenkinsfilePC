@@ -1,0 +1,47 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('continuousDownload')
+        {
+            steps
+            {
+                git 'https://github.com/gassama85/maven.git'
+            }
+        }
+        stage('continuousBuild')
+        {
+            steps
+            {
+                sh 'mvn package'
+            }
+        }
+        stage('continuousDeployment')
+        {
+            steps
+            {
+                deploy adapters: [tomcat9(credentialsId: 'bc8d4b6c-2954-40ca-8ac7-5d15dcaaf92b', path: '', url: 'http://172.31.25.182:8080')], contextPath: 'testapp', war: '**/*.war'
+            }
+        }
+        stage('continuousTesting')
+        {
+            steps
+            {
+                git 'https://github.com/gassama85/FunctionalTesting.git'
+                sh 'java -jar /home/ubuntu/.jenkins/workspace/DeclarativePipelinePC/testing.jar'
+            }
+        }
+    }
+    post
+    {
+        success
+        {
+           deploy adapters: [tomcat9(credentialsId: 'bc8d4b6c-2954-40ca-8ac7-5d15dcaaf92b', path: '', url: 'http://172.31.46.227:8080')], contextPath: 'prodapp', war: '**/*.war' 
+        }
+        failure
+        {
+           mail bcc: '', body: 'Jenkins failed to deploy the skyda project codes into the QA server of the prodserver', cc: 'gassama85@gmail.com', from: '', replyTo: '', subject: 'Deployment failure notice', to: 'gassama85@gmail.com' 
+        }
+    }
+}
