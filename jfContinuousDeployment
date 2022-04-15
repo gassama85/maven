@@ -1,0 +1,23 @@
+pipeline
+{
+    agent any
+    stages
+    {      
+        stage('continuousDeployment')
+        {
+            steps
+            {
+                deploy adapters: [tomcat9(credentialsId: 'bc8d4b6c-2954-40ca-8ac7-5d15dcaaf92b', path: '', url: 'http://172.31.25.182:8080')], contextPath: 'testapp', war: '**/*.war'
+            }
+        }
+        stage('continuousTesting')
+        {
+            steps
+            {
+                git 'https://github.com/gassama85/FunctionalTesting.git'
+                sh 'java -jar /home/ubuntu/.jenkins/workspace/DeclarativePipeline1/testing.jar'
+            }
+        }
+        
+    }
+}
